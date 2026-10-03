@@ -1,0 +1,70 @@
+[project]
+name = "cellpy-figure"
+dynamic = ["version"]
+description = "A portable figure bundle: the plotted table plus its encodings, drawn with matplotlib or Plotly."
+readme = "README.md"
+authors = [
+    { name = "jepegit", email = "jepe@ife.no" }
+]
+requires-python = ">=3.13"
+license = "MIT"
+license-files = ["LICENSE"]
+keywords = ["cellpy", "figure", "matplotlib", "plotly", "battery"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+    "pandas>=2.2.3",
+    "pyarrow>=16",
+]
+
+[project.optional-dependencies]
+mpl = [
+    "matplotlib>=3.11.2",
+]
+plotly = [
+    "plotly>=7.1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/cellpy/cellpy-figure"
+Repository = "https://github.com/cellpy/cellpy-figure"
+Issues = "https://github.com/cellpy/cellpy-figure/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/cellpy_figure/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cellpy_figure"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.github",
+    "/docs",
+    "/tests",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
