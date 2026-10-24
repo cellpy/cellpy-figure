@@ -103,14 +103,15 @@ class Figure:
 
         Args:
             preset: Name of a preset in ``cellpy_figure.presets``.
-            overrides: Reserved for size overrides. Unused until rendering exists.
+            overrides: ``width_mm`` and ``height_mm`` replace the preset size.
 
         Returns:
             A ``matplotlib.figure.Figure``.
 
         Raises:
             ImportError: Matplotlib is not installed.
-            NotImplementedError: Rendering is not implemented yet.
+            BundleError: The figure is not one drawable panel.
+            ValueError: ``preset`` or an override is not valid.
         """
         from cellpy_figure.mpl import render
 
