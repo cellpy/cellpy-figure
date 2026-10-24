@@ -1,8 +1,9 @@
 # cellpy-figure — guiding plan
 
-Status: **design, not implemented.** This file is the contract for the first
-version. Change it when a decision changes; do not let the code drift ahead of
-it.
+Status: **in progress.** Reading and writing a `.cfz` file is implemented.
+Rendering, the JSON Schema, and publishing are not. This file is the contract
+for the first version. Change it when a decision changes; do not let the code
+drift ahead of it.
 
 The package on PyPI will be `cellpy-figure`. The import name will be
 `cellpy_figure`. The on-disk figure is a zip with the extension `.cfz`.

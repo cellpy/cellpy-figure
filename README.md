@@ -5,5 +5,5 @@ it, so a coauthor can redraw it with matplotlib or Plotly without installing
 cellpy.
 
 The design, the file format, and what cellpy and cellpy-simple-gui are
-expected to do are in [PLAN.md](PLAN.md). The package layout is in place.
-Reading, writing, and rendering a `.cfz` file are not implemented yet.
+expected to do are in [PLAN.md](PLAN.md). Reading and writing a `.cfz` file
+works. Rendering with matplotlib or Plotly is not implemented yet.

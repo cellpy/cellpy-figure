@@ -3,7 +3,7 @@
 import pytest
 
 import cellpy_figure
-from cellpy_figure import Encoding, Figure, Panel, Provenance, open_figure
+from cellpy_figure import Encoding, Figure, Panel, Provenance
 from cellpy_figure.presets import get_preset
 
 
@@ -26,14 +26,6 @@ def test_figure_holds_a_panel():
     )
     assert figure.panels[0].x.field == "capacity"
     assert figure.provenance.producer == "cellpy"
-
-
-def test_write_and_open_are_not_implemented_yet():
-    figure = Figure(data=[], panels=[])
-    with pytest.raises(NotImplementedError, match="writing"):
-        figure.write("out.cfz")
-    with pytest.raises(NotImplementedError, match="reading"):
-        open_figure("out.cfz")
 
 
 def test_render_reaches_the_renderer():
