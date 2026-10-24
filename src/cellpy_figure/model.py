@@ -1,8 +1,7 @@
 """Figure model: a tidy table plus the encodings that draw it.
 
-The on-disk schema is not implemented yet. These types are the in-memory
-shape ``PLAN.md`` describes, so callers can build a figure before write
-and render exist.
+These types are the in-memory shape ``PLAN.md`` describes. ``Figure.write``
+stores that shape in a ``.cfz`` bundle. Rendering is still unimplemented.
 """
 
 from __future__ import annotations
@@ -71,7 +70,8 @@ class Figure:
 
     Args:
         data: The plotted rows. A ``pandas.DataFrame`` or a
-            ``polars.DataFrame``. Stored as given until write exists.
+            ``polars.DataFrame``. ``write`` stores the table as parquet and
+            drops the index.
         panels: One or more panels sharing ``data``.
         title: Figure title.
         provenance: Writer identity. Required once the bundle is written.
@@ -87,10 +87,16 @@ class Figure:
     def write(self, path: str) -> None:
         """Write this figure to a ``.cfz`` bundle.
 
+        Args:
+            path: Destination path. An existing file is replaced.
+
         Raises:
-            NotImplementedError: Bundle writing is not implemented yet.
+            BundleError: The figure is not a valid bundle, or the path
+                cannot be written.
         """
-        raise NotImplementedError("writing a .cfz bundle is not implemented yet")
+        from cellpy_figure.io import write_figure
+
+        write_figure(self, path)
 
     def to_matplotlib(self, preset: str = "notebook", **overrides: Any) -> Any:
         """Draw this figure with matplotlib.
