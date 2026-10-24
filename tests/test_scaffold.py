@@ -28,10 +28,8 @@ def test_figure_holds_a_panel():
     assert figure.provenance.producer == "cellpy"
 
 
-def test_render_reaches_the_renderer():
+def test_plotly_is_not_implemented_yet():
     figure = Figure(data=[], panels=[])
-    with pytest.raises(NotImplementedError, match="matplotlib"):
-        figure.to_matplotlib()
     with pytest.raises(NotImplementedError, match="plotly"):
         figure.to_plotly()
 

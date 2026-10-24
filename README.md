@@ -6,4 +6,5 @@ cellpy.
 
 The design, the file format, and what cellpy and cellpy-simple-gui are
 expected to do are in [PLAN.md](PLAN.md). Reading and writing a `.cfz` file
-works. Rendering with matplotlib or Plotly is not implemented yet.
+works. ``to_matplotlib`` draws one panel. Plotly rendering and facet rows
+are not implemented yet.

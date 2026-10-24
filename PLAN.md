@@ -1,7 +1,8 @@
 # cellpy-figure — guiding plan
 
 Status: **in progress.** Reading and writing a `.cfz` file is implemented.
-Rendering, the JSON Schema, and publishing are not. This file is the contract
+``to_matplotlib`` draws one panel. Plotly, facet rows, the JSON Schema, and
+publishing are not. This file is the contract
 for the first version. Change it when a decision changes; do not let the code
 drift ahead of it.
 
