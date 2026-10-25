@@ -1,7 +1,8 @@
 """Figure model: a tidy table plus the encodings that draw it.
 
 These types are the in-memory shape ``PLAN.md`` describes. ``Figure.write``
-stores that shape in a ``.cfz`` bundle. Rendering is still unimplemented.
+stores that shape in a ``.cfz`` bundle. ``to_matplotlib`` and ``to_plotly``
+draw one panel, or one facet row when that panel has a facet encoding.
 """
 
 from __future__ import annotations
@@ -110,7 +111,8 @@ class Figure:
 
         Raises:
             ImportError: Matplotlib is not installed.
-            BundleError: The figure is not one drawable panel.
+            BundleError: The figure has several panels, or an encoding does
+                not match the table.
             ValueError: ``preset`` or an override is not valid.
         """
         from cellpy_figure.mpl import render
@@ -129,7 +131,8 @@ class Figure:
 
         Raises:
             ImportError: Plotly is not installed.
-            BundleError: The figure is not one drawable panel.
+            BundleError: The figure has several panels, or an encoding does
+                not match the table.
             ValueError: ``preset`` or an override is not valid.
         """
         from cellpy_figure.plotly import render

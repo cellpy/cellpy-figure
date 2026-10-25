@@ -1,14 +1,16 @@
 """Draw one panel with Plotly.
 
-Facet rows and extra panels are refused. Matplotlib lives in ``mpl.py``.
-The stroke scale uses the same words as matplotlib (``solid``, ``dashed``,
-``dotted``, ``dashdot``). This module translates them into Plotly dashes.
+A facet encoding draws that panel as one row. Extra panel entries are
+refused. Matplotlib lives in ``mpl.py``. The stroke scale uses the same
+words as matplotlib (``solid``, ``dashed``, ``dotted``, ``dashdot``). This
+module translates them into Plotly dashes.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
+from cellpy_figure.facets import facet_slices
 from cellpy_figure.io import BundleError, _as_pandas
 from cellpy_figure.model import Encoding, Figure, Panel
 from cellpy_figure.presets import get_preset
@@ -33,7 +35,8 @@ def render(figure: Figure, *, preset: str = "notebook", **overrides: Any) -> Any
     """Draw ``figure`` with Plotly.
 
     Args:
-        figure: A ``cellpy_figure.Figure`` with one panel and no facet.
+        figure: A ``cellpy_figure.Figure`` with one panel. A facet encoding
+            draws that panel as one row of subplots.
         preset: Preset name. Supplies the layout mapping and the default size.
             It does not change a quantitative color encoding into a nominal one.
         overrides: ``width_mm`` and ``height_mm`` replace the preset size.
@@ -43,8 +46,8 @@ def render(figure: Figure, *, preset: str = "notebook", **overrides: Any) -> Any
 
     Raises:
         ImportError: The ``plotly`` extra is not installed.
-        BundleError: The figure is not one drawable panel, or an encoding
-            does not match the table.
+        BundleError: The figure has several panels, or an encoding does not
+            match the table.
         ValueError: ``preset`` is unknown, or an override is not a size.
     """
     go = _graph_objects()
@@ -61,19 +64,43 @@ def render(figure: Figure, *, preset: str = "notebook", **overrides: Any) -> Any
     frame = _as_pandas(figure.data)
     _require_columns(frame, panel)
 
-    fig = go.Figure()
-    fig.update_layout(**chosen.plotly_layout)
-    if panel.color is not None and panel.color.type == "quantitative":
-        _draw_quantitative(fig, go, frame, panel)
-    else:
-        _draw_nominal(fig, go, frame, panel)
-    fig.update_layout(
-        width=_px(width),
-        height=_px(height),
-        title=figure.title,
-        xaxis_title=_axis_label(panel.x),
-        yaxis_title=_axis_label(panel.y),
+    if panel.facet is None:
+        fig = go.Figure()
+        fig.update_layout(**chosen.plotly_layout)
+        _draw_panel(fig, go, frame, panel)
+        fig.update_layout(
+            width=_px(width),
+            height=_px(height),
+            title=figure.title,
+            xaxis_title=_axis_label(panel.x),
+            yaxis_title=_axis_label(panel.y),
+        )
+        return fig
+    slices = facet_slices(frame, panel.facet.field)
+    fig = _make_subplots()(
+        rows=1,
+        cols=len(slices),
+        subplot_titles=[str(title) for title, _part in slices],
     )
+    fig.update_layout(**chosen.plotly_layout)
+    color_of = _nominal_colors(fig, frame, panel)
+    values = _quantitative_values(frame, panel)
+    for index, (_title, part) in enumerate(slices, start=1):
+        _draw_panel(
+            fig,
+            go,
+            part,
+            panel,
+            color_of=color_of,
+            values=values,
+            legend=index == 1,
+            colorbar=index == 1,
+            row=1,
+            col=index,
+        )
+        fig.update_xaxes(title_text=_axis_label(panel.x), row=1, col=index)
+        fig.update_yaxes(title_text=_axis_label(panel.y), row=1, col=index)
+    fig.update_layout(width=_px(width), height=_px(height), title=figure.title)
     return fig
 
 
@@ -85,6 +112,14 @@ def _graph_objects():
     return go
 
 
+def _make_subplots():
+    try:
+        from plotly.subplots import make_subplots
+    except ImportError as exc:
+        raise ImportError(_EXTRA) from exc
+    return make_subplots
+
+
 def _px(mm: float) -> int:
     return round(mm / _MM_PER_INCH * _PX_PER_INCH)
 
@@ -94,13 +129,9 @@ def _one_panel(figure: Figure) -> Panel:
     if count != 1:
         raise BundleError(
             f"to_plotly draws one panel; this figure has {count}. "
-            "Facet rows are not drawn yet."
+            "Several panel entries are not a facet row."
         )
     panel = figure.panels[0]
-    if panel.facet is not None:
-        raise BundleError(
-            "facet encodings are not drawn yet. to_plotly draws one panel."
-        )
     if panel.color is not None and panel.color.type not in ("nominal", "quantitative"):
         raise BundleError(
             "panel 1 color.type must be nominal or quantitative; "
@@ -116,6 +147,7 @@ def _require_columns(frame, panel: Panel) -> None:
         ("y", panel.y),
         ("color", panel.color),
         ("stroke", panel.stroke),
+        ("facet", panel.facet),
     ]
     for name, encoding in channels:
         if encoding is None:
@@ -134,13 +166,77 @@ def _axis_label(encoding: Encoding) -> str:
     return text
 
 
-def _draw_nominal(fig, go, frame, panel: Panel) -> None:
+def _draw_panel(
+    fig,
+    go,
+    frame,
+    panel: Panel,
+    *,
+    color_of: dict[Any, str] | None = None,
+    values=None,
+    legend: bool = True,
+    colorbar: bool = True,
+    row: int | None = None,
+    col: int | None = None,
+) -> None:
+    if panel.color is not None and panel.color.type == "quantitative":
+        _draw_quantitative(
+            fig,
+            go,
+            frame,
+            panel,
+            values=values,
+            showscale=colorbar,
+            row=row,
+            col=col,
+        )
+    else:
+        _draw_nominal(
+            fig, go, frame, panel, color_of=color_of, legend=legend, row=row, col=col
+        )
+
+
+def _nominal_colors(fig, frame, panel: Panel) -> dict[Any, str] | None:
+    color = panel.color
+    if color is None or color.type == "quantitative":
+        return None
+    palette = _colorway(fig)
+    categories = list(dict.fromkeys(frame[color.field].tolist()))
+    return {
+        category: palette[i % len(palette)] for i, category in enumerate(categories)
+    }
+
+
+def _quantitative_values(frame, panel: Panel):
+    color = panel.color
+    if color is None or color.type != "quantitative":
+        return None
+    return _numeric_color(frame, color.field)
+
+
+def _add_trace(fig, trace, row: int | None, col: int | None) -> None:
+    if row is None:
+        fig.add_trace(trace)
+    else:
+        fig.add_trace(trace, row=row, col=col)
+
+
+def _draw_nominal(
+    fig,
+    go,
+    frame,
+    panel: Panel,
+    *,
+    color_of: dict[Any, str] | None = None,
+    legend: bool = True,
+    row: int | None = None,
+    col: int | None = None,
+) -> None:
     color = panel.color
     stroke = panel.stroke
     fields = [enc.field for enc in (color, stroke) if enc is not None]
-    palette = _colorway(fig)
-    color_of: dict[Any, str] = {}
-    if color is not None:
+    if color is not None and color_of is None:
+        palette = _colorway(fig)
         categories = list(dict.fromkeys(frame[color.field].tolist()))
         color_of = {
             category: palette[i % len(palette)] for i, category in enumerate(categories)
@@ -155,26 +251,40 @@ def _draw_nominal(fig, go, frame, panel: Panel) -> None:
             color_value, stroke_value, color is not None, stroke is not None
         )
         line: dict[str, Any] = {"dash": dash}
-        if color is not None:
+        if color is not None and color_of is not None:
             line["color"] = color_of[color_value]
-        fig.add_trace(
+        _add_trace(
+            fig,
             go.Scatter(
                 x=group[panel.x.field],
                 y=group[panel.y.field],
                 mode="lines",
                 name=name or "",
                 line=line,
-                showlegend=name is not None,
-            )
+                showlegend=legend and name is not None,
+            ),
+            row,
+            col,
         )
-    if color is not None and color.legend_title and fig.data:
+    if legend and color is not None and color.legend_title and fig.data:
         fig.update_layout(legend_title_text=color.legend_title)
 
 
-def _draw_quantitative(fig, go, frame, panel: Panel) -> None:
+def _draw_quantitative(
+    fig,
+    go,
+    frame,
+    panel: Panel,
+    *,
+    values=None,
+    showscale: bool = True,
+    row: int | None = None,
+    col: int | None = None,
+) -> None:
     color = panel.color
     assert color is not None
-    values = _numeric_color(frame, color.field)
+    if values is None:
+        values = _numeric_color(frame, color.field)
     vmin = float(values.min())
     vmax = float(values.max())
     if vmin == vmax:
@@ -195,12 +305,13 @@ def _draw_quantitative(fig, go, frame, panel: Panel) -> None:
             "colorscale": _SEQUENTIAL_COLORSCALE,
             "cmin": vmin,
             "cmax": vmax,
-            "showscale": first,
+            "showscale": showscale and first,
             "size": 6,
         }
-        if first:
+        if showscale and first:
             marker["colorbar"] = {"title": {"text": label}}
-        fig.add_trace(
+        _add_trace(
+            fig,
             go.Scatter(
                 x=group[panel.x.field],
                 y=group[panel.y.field],
@@ -208,7 +319,9 @@ def _draw_quantitative(fig, go, frame, panel: Panel) -> None:
                 name=name,
                 marker=marker,
                 line={"dash": dash},
-            )
+            ),
+            row,
+            col,
         )
         first = False
 

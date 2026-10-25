@@ -108,11 +108,7 @@ def test_journal_preset_sets_size_and_font():
     assert wider.layout.width == _px(120)
 
 
-def test_facet_and_extra_panels_are_refused():
-    figure = _figure()
-    figure.panels[0].facet = Encoding("cycle")
-    with pytest.raises(BundleError, match="facet"):
-        figure.to_plotly()
+def test_extra_panels_are_refused():
     figure = _figure()
     figure.panels.append(Panel(x=Encoding("capacity"), y=Encoding("voltage")))
     with pytest.raises(BundleError, match="one panel"):
