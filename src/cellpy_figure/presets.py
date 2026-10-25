@@ -43,7 +43,7 @@ class Preset:
         width_mm: Figure width in millimetres.
         height_mm: Figure height in millimetres.
         rcparams: Matplotlib ``rcParams`` applied while drawing.
-        plotly_layout: Plotly layout mapping. Drawing it is a later step.
+        plotly_layout: Plotly layout mapping applied by ``to_plotly``.
     """
 
     name: str
