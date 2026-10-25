@@ -28,12 +28,6 @@ def test_figure_holds_a_panel():
     assert figure.provenance.producer == "cellpy"
 
 
-def test_plotly_is_not_implemented_yet():
-    figure = Figure(data=[], panels=[])
-    with pytest.raises(NotImplementedError, match="plotly"):
-        figure.to_plotly()
-
-
 def test_unknown_preset_names_the_known_ones():
     with pytest.raises(ValueError, match="acs-single"):
         get_preset("journal")

@@ -1,8 +1,8 @@
 # cellpy-figure — guiding plan
 
 Status: **in progress.** Reading and writing a `.cfz` file is implemented.
-``to_matplotlib`` draws one panel. Plotly, facet rows, the JSON Schema, and
-publishing are not. This file is the contract
+``to_matplotlib`` and ``to_plotly`` each draw one panel. Facet rows, the JSON
+Schema, and publishing are not. This file is the contract
 for the first version. Change it when a decision changes; do not let the code
 drift ahead of it.
 
@@ -228,7 +228,10 @@ figure.to_plotly(preset="acs-single")
 (`set_xlim`, a panel letter, `savefig`) are the caller's, in matplotlib, not
 new methods on `Figure`.
 
-`to_plotly` returns a `plotly.graph_objects.Figure`.
+`to_plotly` returns a `plotly.graph_objects.Figure`. The stroke scale keeps
+the file's words (`solid`, `dashed`, `dotted`, `dashdot`); Plotly draws those
+as `solid`, `dash`, `dot`, and `dashdot`. A quantitative color stays on one
+sequential scale (`Viridis`) for every preset.
 
 Both accept `preset=` and a small set of overrides (`width_mm`, `height_mm`).
 They do not accept a free-form matplotlib `rcParams` dict or a Plotly layout
