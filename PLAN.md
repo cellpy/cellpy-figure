@@ -2,13 +2,13 @@
 
 Status: **in progress.** Reading and writing a `.cfz` file is implemented.
 ``to_matplotlib`` and ``to_plotly`` draw one panel, or one facet row.
-The format-version 1 JSON Schema ships in the wheel. The publish workflow
-is in the repository. The first upload waits on the pending publisher.
-Several panel entries are not drawn yet. This file is the contract for the
-first version.
+The format-version 1 JSON Schema ships in the wheel. Version 0.1.0 is on
+PyPI. The next release follows the Release & version bump section of
+`.issueflows/04-designs-and-guides/this-project.md`. Several panel entries
+are not drawn yet. This file is the contract for the first version.
 Change it when a decision changes; do not let the code drift ahead of it.
 
-The package on PyPI will be `cellpy-figure`. The import name will be
+The package on PyPI is `cellpy-figure`. The import name is
 `cellpy_figure`. The on-disk figure is a zip with the extension `.cfz`.
 
 ## The problem
@@ -572,13 +572,13 @@ cannot be automated; it needs a logged-in PyPI account:
    - PyPI project: `cellpy-figure`
    - Owner: `cellpy` (the GitHub org, not the PyPI username)
    - Repository: `cellpy-figure`
-   - Workflow: the filename, e.g. `publish.yml`
+   - Workflow: `publish.yml`
    - Environment: `pypi`
-2. Repeat on TestPyPI with environment `testpypi` before the first real
-   upload.
-3. GitHub → Settings → Environments → create `pypi` and `testpypi`. Empty is
-   fine. A required reviewer can be added later so a release waits for a
-   person.
+2. GitHub → Settings → Environments → create `pypi`. Empty is fine. A
+   required reviewer can be added later so a release waits for a person.
+
+Both of those are done. `0.1.0` is the first upload. Do not add a TestPyPI
+publisher or a `testpypi` environment.
 
 PyPI checks the environment name. If the workflow's `environment:` and the
 pending publisher disagree, the upload is rejected. Renaming the workflow
@@ -601,8 +601,10 @@ The workflow:
   static `__version__` does not need it. cellpy needs it because the version
   comes from tags.
 
-Rehearse the first upload on TestPyPI via `workflow_dispatch`. cellpy-simple-gui
-does this and it is the cheap way to discover a wrong environment name.
+The next upload is another published GitHub Release from `main`, after the
+version pull request has merged. Do not dispatch this workflow to TestPyPI.
+The commands are in the Release & version bump section of
+`.issueflows/04-designs-and-guides/this-project.md`.
 
 There is no container image and no conda-forge feedstock in v1. cellpy-simple-gui's
 GHCR lesson (new org packages are private until an owner allows public
