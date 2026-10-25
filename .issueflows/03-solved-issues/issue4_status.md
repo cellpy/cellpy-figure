@@ -2,7 +2,7 @@
 
 `figure-1.json` describes format version 1 and loads from the installed package. A written figure and its manifest validate. An unknown key fails and names the key. The wheel contains `cellpy_figure/schema/figure-1.json`. 31 tests passed, and ruff is clean.
 
-- [ ] Done
+- [x] Done
 
 ## What's done
 
@@ -12,4 +12,4 @@
 
 ## Remaining work
 
-- Ship with `/iflow-close`. Nothing is committed yet.
+- None.
