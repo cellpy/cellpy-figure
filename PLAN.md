@@ -1,10 +1,10 @@
 # cellpy-figure — guiding plan
 
 Status: **in progress.** Reading and writing a `.cfz` file is implemented.
-``to_matplotlib`` and ``to_plotly`` each draw one panel. Facet rows, the JSON
-Schema, and publishing are not. This file is the contract
-for the first version. Change it when a decision changes; do not let the code
-drift ahead of it.
+``to_matplotlib`` and ``to_plotly`` draw one panel, or one facet row.
+Several panel entries, the JSON Schema, and publishing are not. This file
+is the contract for the first version. Change it when a decision changes;
+do not let the code drift ahead of it.
 
 The package on PyPI will be `cellpy-figure`. The import name will be
 `cellpy_figure`. The on-disk figure is a zip with the extension `.cfz`.
