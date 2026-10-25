@@ -25,18 +25,42 @@ TODO: command to run lint/format checks
 
 ## Release & version bump
 
-<!-- The iflow-version-bump skill (used by /iflow-close) reads this section
-     first. Fill in ONE strategy and delete the rest; while it is a TODO the
-     skill falls back to auto-detection from pyproject.toml. -->
+Version `0.1.0` is already on PyPI. PyPI will not accept that number again.
 
-- TODO: Describe how this project is versioned and released. Common patterns:
-  - **Static version (uv):** `[project] version` lives in `pyproject.toml`;
-    bump with `uv version --bump <level>` before the release commit.
-  - **Git-tag derived (setuptools-scm / hatch-vcs / versioningit):** the built
-    version comes from the latest tag; never edit a version into
-    `pyproject.toml`. Bumping = creating a tag on the default branch **after**
-    the PR merges, e.g. `git tag v1.2.3 && git push origin v1.2.3` (or
-    `gh release create v1.2.3 --generate-notes`).
+The version string lives only in `src/cellpy_figure/__init__.py` as
+`__version__`. Hatch reads it through `[tool.hatch.version] path`.
+`pyproject.toml` keeps `dynamic = ["version"]`. Do not run `uv version`, and
+do not write a version into `pyproject.toml`. This is not a git-tag version:
+there is no setuptools-scm, hatch-vcs, or versioningit backend.
+
+To release a new version:
+
+1. On the issue branch, set `__version__` to the next number. On a stable
+   release the default step is `patch`. In that same pull request, promote
+   `HISTORY.md`: move `## [Unreleased]` to `## [<version>] - <YYYY-MM-DD>`
+   and leave a fresh empty `## [Unreleased]` above it.
+2. Merge that pull request. Do not tag it, and do not create the GitHub
+   Release from the issue branch.
+3. From `main`, after that version commit is on the default branch:
+
+```bash
+gh release create vX.Y.Z --repo cellpy/cellpy-figure --target main --title "vX.Y.Z"
+```
+
+The tag without the leading `v` must equal `__version__`. Take the release
+notes from the version section in `HISTORY.md`.
+
+`.github/workflows/publish.yml` runs when that release is published. A bare
+tag push does not publish. The publish job uses GitHub environment `pypi`
+and trusted publishing (OIDC). There is no API token. The pending publisher
+is already registered: PyPI project `cellpy-figure`, owner `cellpy`,
+repository `cellpy-figure`, workflow `publish.yml`, environment `pypi`. The
+workflow builds the sdist and wheel, checks them, asserts
+`cellpy_figure/schema/figure-1.json` is in the wheel, and uploads to PyPI.
+
+Do not dispatch the workflow's TestPyPI target, and do not create a
+`testpypi` environment. The `workflow_dispatch` choice that lists `testpypi`
+is unused.
 
 ## Entry points
 
