@@ -1,6 +1,9 @@
 # History
 
-## Unreleased
+## [Unreleased]
 
-- Package scaffold: figure model, preset names, and module layout. Reading,
-  writing, and rendering a `.cfz` bundle are not implemented yet.
+## [0.1.0] - 2026-10-25
+
+- Read and write a `.cfz` bundle, draw one panel or a facet row with
+  matplotlib or Plotly, and validate the spec with the schema shipped in
+  the wheel.

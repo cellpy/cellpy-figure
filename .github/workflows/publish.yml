@@ -1,0 +1,106 @@
+# Publish to PyPI when a GitHub Release is published.
+#
+# Trusted publishing (OIDC): GitHub proves this workflow's identity to PyPI
+# directly, so there is no API token in the repository.
+#
+# The filename and the environment names are part of the trust relationship.
+# Renaming this file, or the environments below, breaks publishing until the
+# trusted publisher is updated to match.
+#
+# A bare tag push does not publish. The release has to be published.
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Where to publish"
+        required: true
+        default: testpypi
+        type: choice
+        options: [testpypi, pypi]
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Check the release tag matches the package version
+        if: github.event_name == 'release'
+        run: |
+          set -euo pipefail
+          tag="${{ github.event.release.tag_name }}"
+          tag="${tag#v}"
+          pkg="$(uv run --no-project --with hatchling python -c "
+          import re, pathlib
+          src = pathlib.Path('src/cellpy_figure/__init__.py').read_text()
+          print(re.search(r'__version__\s*=\s*[\"\x27]([^\"\x27]+)', src).group(1))
+          ")"
+          echo "tag=$tag package=$pkg"
+          [ "$tag" = "$pkg" ] || {
+            echo "::error::Tag v$tag does not match __version__ $pkg"
+            exit 1
+          }
+
+      - name: Build sdist and wheel
+        run: uv build --out-dir dist
+
+      - name: Check the artifacts
+        run: |
+          set -euo pipefail
+          uv run --no-project --with twine twine check dist/*
+          python - <<'PY'
+          import glob, sys, zipfile
+          wheel = glob.glob("dist/*.whl")[0]
+          names = zipfile.ZipFile(wheel).namelist()
+          need = "cellpy_figure/schema/figure-1.json"
+          if need not in names:
+              sys.exit(f"wheel is missing {need}")
+          print(f"{wheel}: {len(names)} entries, schema present")
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    name: publish (TestPyPI)
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'testpypi'
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    name: publish (PyPI)
+    needs: build
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.target == 'pypi')
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1
