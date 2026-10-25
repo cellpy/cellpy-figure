@@ -2,8 +2,10 @@
 
 Status: **in progress.** Reading and writing a `.cfz` file is implemented.
 ``to_matplotlib`` and ``to_plotly`` draw one panel, or one facet row.
-The format-version 1 JSON Schema ships in the wheel. Several panel entries
-and publishing are not. This file is the contract for the first version.
+The format-version 1 JSON Schema ships in the wheel. The publish workflow
+is in the repository. The first upload waits on the pending publisher.
+Several panel entries are not drawn yet. This file is the contract for the
+first version.
 Change it when a decision changes; do not let the code drift ahead of it.
 
 The package on PyPI will be `cellpy-figure`. The import name will be
