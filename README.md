@@ -7,4 +7,5 @@ cellpy.
 The design, the file format, and what cellpy and cellpy-simple-gui are
 expected to do are in [PLAN.md](PLAN.md). Reading and writing a `.cfz` file
 works. ``to_matplotlib`` and ``to_plotly`` draw one panel, or one facet
-row. Several panel entries are not implemented yet.
+row. The format-version 1 JSON Schema ships in the package. Several panel
+entries and publishing are not implemented yet.
